@@ -43,11 +43,10 @@ then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	echo "Docker daemon is now running. The IP address of stochssdocker VM is $(docker-machine ip stochssdocker)"
-	
+	token=$(more $DIR/.admin_key)
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	(docker start stochsscontainer || 
-		(token=$(more $DIR/.admin_key)
-			first_time=true &&
+		(first_time=true &&
 			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token" &&
 			echo "Starting StochSS for the first time."
 			) ||
@@ -63,7 +62,7 @@ then
 	echo "StochSS server is running at the following URL. The browser window should open automatically."
 	echo "http://$(docker-machine ip stochssdocker):8080"
 	
-	xdg-open "http://$(docker-machine ip stochssdocker):8080/login?secret_key=$token"
+	open "http://$(docker-machine ip stochssdocker):8080/login?secret_key=`echo $token`"
 	
 
 else
