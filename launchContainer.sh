@@ -10,11 +10,11 @@ function ctrl_c(){
 	exit 0
 }
 
-(more .admin_key) || (echo `uuidgen` > .admin_key && echo "written key")
-
 if [[ $(uname -s) == 'Linux' ]]
 then
-	token=$(more .admin_key)
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
+	token=$(more $DIR/.admin_key)
 	(docker start stochsscontainer || 
 		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
@@ -40,12 +40,13 @@ then
 	(docker-machine ls stochssdocker | grep -oh "Running") || (docker-machine start stochssdocker || docker-machine create --driver virtualbox stochssdocker)
 	docker-machine env stochssdocker
 	eval "$(docker-machine env stochssdocker)"
-
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	echo "Docker daemon is now running. The IP address of stochssdocker VM is $(docker-machine ip stochssdocker)"
 	
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	(docker start stochsscontainer || 
-		(token=$(more .admin_key)
+		(token=$(more $DIR/.admin_key)
 			first_time=true &&
 			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token" &&
 			echo "Starting StochSS for the first time."
@@ -54,7 +55,7 @@ then
 		)
 
 	# test server is up and connect to it
-	echo "Polling server. This process may take up to 5 minutes..."
+	echo "Starting server. This process may take up to 5 minutes..."
 	until $(curl --output /dev/null --silent --head --fail $(docker-machine ip stochssdocker):8080);
 	do
         sleep 10
