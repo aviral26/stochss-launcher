@@ -66,7 +66,7 @@ then
 	
 
 else
-	echo "Something else"
+	echo "This operating system is not recognized. Press CTRL + C to exit.."
 fi
 
 while :
