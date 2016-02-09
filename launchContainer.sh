@@ -16,7 +16,7 @@ then
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	token=$(more $DIR/.admin_key)
 	(docker start stochsscontainer || 
-		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token" &&
+		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh --install -t $token" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
 		(echo "neither worked" && exit 1)
@@ -66,7 +66,7 @@ then
 	
 
 else
-	echo "This operating system is not recognized. Press CTRL + C to exit.."
+	echo "This operating system is not recognized."
 fi
 
 while :
