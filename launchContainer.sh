@@ -14,9 +14,9 @@ if [[ $(uname -s) == 'Linux' ]]
 then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
-	token=$(more $DIR/.admin_key)
+	token=`more $DIR/.admin_key`
 	(docker start stochsscontainer || 
-		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh --install -t $token" &&
+		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
 		(echo "neither worked" && exit 1)
@@ -43,7 +43,7 @@ then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	echo "Docker daemon is now running. The IP address of stochssdocker VM is $(docker-machine ip stochssdocker)"
-	token=$(more $DIR/.admin_key)
+	token=`more $DIR/.admin_key`
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	(docker start stochsscontainer || 
 		(first_time=true &&
