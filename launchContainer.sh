@@ -5,7 +5,15 @@ trap ctrl_c INT
 function ctrl_c(){
 	echo
 	echo "Stopping StochSS...this may take a while"
-	(docker stop stochsscontainer || docker-machine stop stochssdocker || echo "Could not stop container or VM")
+	if [[ $(uname -s) == 'Linux' ]]
+	then
+		(docker stop stochsscontainer || echo "Could not stop container")
+	elif [[ $(uname -s) == 'Darwin' ]]
+	then
+		(docker-machine stop stochssdocker || echo "Could not stop virtual machine")
+	else
+		echo "Unrecognized operating system"
+	fi
 	echo "Done"
 	exit 0
 }
