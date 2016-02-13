@@ -16,7 +16,7 @@ then
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	token=`more $DIR/.admin_key`
 	(docker start stochsscontainer || 
-		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token" &&
+		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
 		(echo "neither worked" && exit 1)
@@ -33,9 +33,7 @@ then
 	
 elif [[ $(uname -s) == 'Darwin' ]]
 then
-	docker-machine version || curl -L https://github.com/docker/machine/releases/download/v0.5.3/docker-machine_darwin-amd64 >/usr/local/bin/docker-machine && \
-    chmod +x /usr/local/bin/docker-machine && docker-machine version
-
+	docker-machine version || echo "Docker-machine not detected. Please read the installation instructions at xyz"
 	# Start up the VM if it's not already running and set environment variables to use docker
 	(docker-machine ls stochssdocker | grep -oh "Running") || (docker-machine start stochssdocker || docker-machine create --driver virtualbox stochssdocker)
 	docker-machine env stochssdocker
@@ -47,7 +45,7 @@ then
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	(docker start stochsscontainer || 
 		(first_time=true &&
-			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token" &&
+			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token --yy" &&
 			echo "Starting StochSS for the first time."
 			) ||
 		(echo "neither worked" && exit 1)
