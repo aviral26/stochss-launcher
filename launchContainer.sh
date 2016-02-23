@@ -23,7 +23,7 @@ then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	token=`more $DIR/.admin_key`
-	(docker start stochsscontainer || 
+	(docker start stochsscontainer ||
 		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
@@ -41,22 +41,23 @@ then
 	
 elif [[ $(uname -s) == 'Darwin' ]]
 then
-	docker-machine version || echo "Docker-machine not detected. Please read the installation instructions at xyz"
+	docker-machine version || (echo "Docker-machine not detected. Please read the installation instructions at xyz" && exit -1)
 	# Start up the VM if it's not already running and set environment variables to use docker
 	(docker-machine ls stochssdocker | grep -oh "Running") || (docker-machine start stochssdocker || docker-machine create --driver virtualbox stochssdocker)
 	docker-machine env stochssdocker
 	eval "$(docker-machine env stochssdocker)"
+	DOCKERPATH=$(dirname $(which docker-machine))
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	echo "Docker daemon is now running. The IP address of stochssdocker VM is $(docker-machine ip stochssdocker)"
 	token=`more $DIR/.admin_key`
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
 	(docker start stochsscontainer || 
-		(first_time=true &&
+		(echo "Waiting for image..." && osascript $DIR/Stochss.scpt $DOCKERPATH && first_time=true &&
 			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token --yy" &&
 			echo "Starting StochSS for the first time."
 			) ||
-		(echo "neither worked" && exit 1)
+		(echo "Something went wrong." && exit -1)
 		)
 
 	# test server is up and connect to it
