@@ -1,0 +1,5 @@
+uninstall script
+hardcode image version into launchContainer and pullimage
+upgrade
+test data exchange between 1.6 and 1.7
+windows
