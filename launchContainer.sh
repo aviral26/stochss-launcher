@@ -1,6 +1,5 @@
 #!/bin/bash
-# trap ctrl_c and call ctrl_c()
-trap ctrl_c INT
+trap ctrl_c INT SIGHUP SIGINT SIGTERM
 
 function ctrl_c(){
 	echo
@@ -27,7 +26,7 @@ then
 		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
-		(echo "neither worked" && exit 1)
+		(echo "neither worked" && ctrl_c)
 		)
 	
 	echo "Starting server. This process may take up to 5 minutes..."
@@ -57,7 +56,7 @@ then
 			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token --yy" &&
 			echo "Starting StochSS for the first time."
 			) ||
-		(echo "Something went wrong." && exit -1)
+		(echo "Something went wrong." && ctrl_c)
 		)
 
 	# test server is up and connect to it
@@ -74,6 +73,7 @@ then
 
 else
 	echo "This operating system is not recognized."
+	ctrl_c
 fi
 
 while :
