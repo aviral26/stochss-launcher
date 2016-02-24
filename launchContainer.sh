@@ -1,7 +1,7 @@
 #!/bin/bash
-trap ctrl_c INT SIGHUP SIGINT SIGTERM
+trap clean_up INT SIGHUP SIGINT SIGTERM
 
-function ctrl_c(){
+function clean_up(){
 	echo
 	echo "Stopping StochSS...this may take a while"
 	if [[ $(uname -s) == 'Linux' ]]
@@ -9,7 +9,8 @@ function ctrl_c(){
 		(docker stop stochsscontainer || echo "Could not stop container")
 	elif [[ $(uname -s) == 'Darwin' ]]
 	then
-		(docker-machine stop stochssdocker || echo "Could not stop virtual machine")
+		echo "Not stopping VM while debugging"
+		#(docker-machine stop stochssdocker || echo "Could not stop virtual machine")
 	else
 		echo "Unrecognized operating system"
 	fi
@@ -22,11 +23,11 @@ then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	token=`more $DIR/.admin_key`
-	(docker start stochsscontainer ||
+	(docker start stochsscontainer >> $DIR/.log ||
 		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" &&
 			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
 			) ||
-		(echo "neither worked" && ctrl_c)
+		(echo "neither worked" && clean_up)
 		)
 	
 	echo "Starting server. This process may take up to 5 minutes..."
@@ -41,23 +42,23 @@ then
 elif [[ $(uname -s) == 'Darwin' ]]
 then
 	docker-machine version || (echo "Docker-machine not detected. Please read the installation instructions at xyz" && exit -1)
+	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	# Start up the VM if it's not already running and set environment variables to use docker
-	(docker-machine ls stochssdocker | grep -oh "Running") || (docker-machine start stochssdocker || docker-machine create --driver virtualbox stochssdocker)
-	docker-machine env stochssdocker
+	(docker-machine ls stochssdocker | grep -oh "Running") || (docker-machine start stochssdocker >> $DIR/.log || docker-machine create --driver virtualbox stochssdocker)
+	docker-machine env stochssdocker >> $DIR/.log
 	eval "$(docker-machine env stochssdocker)"
 	DOCKERPATH=$(dirname $(which docker-machine))
-	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
+	
+	(more $DIR/.admin_key >> $DIR/.log) || (echo `uuidgen` > $DIR/.admin_key && echo "Generated key.")
 	echo "Docker daemon is now running. The IP address of stochssdocker VM is $(docker-machine ip stochssdocker)"
 	token=`more $DIR/.admin_key`
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
-	(docker start stochsscontainer || 
-		(echo "Waiting for image..." && osascript $DIR/Stochss.scpt $DOCKERPATH && first_time=true &&
-			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token --yy" &&
+	docker start stochsscontainer >> $DIR/.log 2>&1 || 
+		(echo "Waiting for image..." && osascript $DIR/Stochss.scpt $DOCKERPATH && (docker images | grep -oh "aviralcse/stochss-initial" || (echo "Failed to get image. Exiting.." && clean_up && exit -1)) && first_time=true &&
+			docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer aviralcse/stochss-initial sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochssdocker) -t $token --yy" >> $DIR/.log &&
 			echo "Starting StochSS for the first time."
 			) ||
-		(echo "Something went wrong." && ctrl_c)
-		)
+		(echo "Something went wrong." && clean_up && exit -1)
 
 	# test server is up and connect to it
 	echo "Starting server. This process may take up to 5 minutes..."
@@ -73,7 +74,7 @@ then
 
 else
 	echo "This operating system is not recognized."
-	ctrl_c
+	clean_up
 fi
 
 while :
