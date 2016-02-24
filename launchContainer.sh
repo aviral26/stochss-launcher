@@ -9,8 +9,8 @@ function clean_up(){
 		(docker stop stochsscontainer || echo "Could not stop container")
 	elif [[ $(uname -s) == 'Darwin' ]]
 	then
-		echo "Not stopping VM while debugging"
-		#(docker-machine stop stochssdocker || echo "Could not stop virtual machine")
+		#echo "Not stopping VM while debugging"
+		(docker-machine stop stochssdocker || echo "Could not stop virtual machine")
 	else
 		echo "Unrecognized operating system"
 	fi
