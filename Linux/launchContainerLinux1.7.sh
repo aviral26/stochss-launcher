@@ -23,12 +23,8 @@ then
 	DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	(more $DIR/.admin_key) || (echo `uuidgen` > $DIR/.admin_key && echo "written key")
 	token=`more $DIR/.admin_key`
-	(docker start stochsscontainer1_7 >> $DIR/.dockerlog ||
-		(docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" &&
-			echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"
-			) ||
-		(echo "neither worked" && clean_up)
-		)
+	docker start stochsscontainer1_7 >> $DIR/.dockerlog || { docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -t $token --yy" && echo "To view Logs, run \"docker logs -f stochsscontainer\" from another terminal"; } ||	{ echo "neither worked"; clean_up; }
+		
 	
 	echo "Starting server. This process may take up to 5 minutes..."
 	until $(curl --output /dev/null --silent --head --fail $(docker inspect --format {{.NetworkSettings.IPAddress}} stochsscontainer):8080);

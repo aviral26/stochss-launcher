@@ -1,7 +1,9 @@
-uninstall script
+	uninstall script
 	hardcode image version into launchContainer and pullimage
 	upgrade
 test data exchange between 1.6 and 1.7
 windows
 	display url fully (with key)
-separate osx and linux launchContainer?
+	separate osx and linux launchContainer?
+
+regenerate certs interferes with admin key exchange
