@@ -1,5 +1,5 @@
+# THIS SCRIPT IS OBSOLETE
 #!/bin/bash
-read -p "Please make you have saved any data you need from this version of StochSS (1.7). Press enter to continue uninstallation or CTRL + C to quit" key
 docker-machine version || (echo "Looks like docker-machine is not installed; no VM to delete. Exiting.." && exit 0)
 echo "Deleting StochSS 1.7..."
 docker-machine ls | grep -oh "stochssdocker" >> .uninstallLog || { echo "VM does not exist."; exit 1; }
