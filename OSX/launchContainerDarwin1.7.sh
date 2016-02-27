@@ -3,7 +3,7 @@ trap clean_up INT SIGHUP SIGINT SIGTERM
 
 function clean_up(){
 	echo
-	echo "Please wait while the StochSS 1.7 VM is correctly stopped..."
+	echo "Please wait while the StochSS 1.7 VM is stopped correctly..."
 	IR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 	docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
 	docker-machine stop stochss1-7 || exit 1
@@ -26,7 +26,7 @@ then
 	echo "Docker daemon is now running. The IP address of stochss1-7 VM is $(docker-machine ip stochss1-7)"
 	token=`more $DIR/.admin_key`
 	# Start container if it already exists, else run aviral/stochss-initial image to create a new one
-	docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" || { echo "A terminal window should open up to download StochSS. Waiting for image..." && osascript $DIR/StochSS.scpt $DOCKERPATH && { docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" || { echo "Failed to get image."; clean_up; exit 1; }; }; }; } && { first_time=true && docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss- master; ./run.ubuntu.sh -a $(docker-machine ip stochss1-7) -t $token --yy" >> $DIR/.dockerlog && echo "Starting StochSS for the first time."; } || { echo "Something went wrong."; clean_up; exit 1; }
+	docker start stochsscontainer1_7 >> $DIR/.dockerlog 2>&1 || { { docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" || { echo "A terminal window should open up to download StochSS. Waiting for image..." && osascript $DIR/StochSS.scpt $DOCKERPATH && { docker images | grep "aviralcse/stochss-initial" | grep -oh "1.7" || { echo "Failed to get image."; clean_up; exit 1; }; }; }; } && { first_time=true && docker run -d -p 8080:8080 -p 8000:8000 --name=stochsscontainer1_7 aviralcse/stochss-initial:1.7 sh -c "cd stochss-master; ./run.ubuntu.sh -a $(docker-machine ip stochss1-7) -t $token --yy" >> $DIR/.dockerlog && echo "Starting StochSS 1.7 for the first time."; } } || { echo "Failed to start server."; clean_up; exit 1; }
 
 	# test server is up and connect to it
 	echo "Starting server. This process may take up to 5 minutes..."
