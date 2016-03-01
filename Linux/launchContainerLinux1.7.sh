@@ -5,7 +5,7 @@ function clean_up(){
 	echo
 	echo "Please wait while StochSS 1.7 is stopped correctly..."
 	IR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-	#docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
+	docker stop stochsscontainer1_7 >> $IR/.dockerlog 2>&1
 	echo "Done"
 	exit 0
 }
